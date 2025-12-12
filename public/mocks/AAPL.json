@@ -1,0 +1,19 @@
+{
+    "meta": {
+        "ticker": "AAPL"
+    },
+    "holders": [
+        {
+            "name": "Vanguard",
+            "pct": 7.1
+        },
+        {
+            "name": "BlackRock",
+            "pct": 6.5
+        },
+        {
+            "name": "State Street",
+            "pct": 4.2
+        }
+    ]
+}
