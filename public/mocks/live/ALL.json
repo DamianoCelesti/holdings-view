@@ -1,0 +1,29 @@
+{
+    "updatedAt": "2025-12-15T23:10:00+01:00",
+    "events": [
+        {
+            "id": "1",
+            "datetime": "2025-12-15T23:08:00+01:00",
+            "big": "Microsoft",
+            "small": "TinyCloud",
+            "type": "investment",
+            "note": "Minority stake"
+        },
+        {
+            "id": "2",
+            "datetime": "2025-12-15T23:01:00+01:00",
+            "big": "Google",
+            "small": "VisionForge",
+            "type": "investment",
+            "note": "Seed round"
+        },
+        {
+            "id": "3",
+            "datetime": "2025-12-15T22:55:00+01:00",
+            "big": "Amazon",
+            "small": "ShipIQ",
+            "type": "partnership",
+            "note": "Logistics partnership"
+        }
+    ]
+}

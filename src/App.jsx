@@ -1,4 +1,4 @@
-import { Routes, Route, Link } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home'
 import Ticker from './pages/Ticker'
 
@@ -7,9 +7,6 @@ export default function App() {
     <div className="app">
       <header>
         <h1>holdings-view</h1>
-        <nav>
-          <Link to="/">Home</Link>
-        </nav>
       </header>
 
       <Routes>
