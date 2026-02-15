@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model RawPost {
+  id          Int      @id @default(autoincrement())
+  redditId    String   @unique
+  subreddit   String
+  title       String
+  author      String?
+  url         String
+  permalink   String
+  selftext    String?  @db.LongText
+  score       Int?
+  numComments Int?
+  createdUtc  DateTime?
+  fetchedAt   DateTime @default(now())
+
+  @@index([subreddit])
+}
+
+model SavedPost {
+  id          Int      @id @default(autoincrement())
+  redditId    String   @unique
+  subreddit   String
+  title       String
+  author      String?
+  url         String
+  permalink   String
+  selftext    String?  @db.LongText
+  score       Int?
+  numComments Int?
+  createdUtc  DateTime?
+  fetchedAt   DateTime
+  savedAt     DateTime @default(now())
+
+  summaryMd   String   @db.LongText
+}
