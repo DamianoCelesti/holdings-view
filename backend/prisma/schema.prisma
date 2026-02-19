@@ -7,21 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum RawStatus {
+  NEW
+  DISMISSED
+  SAVED
+}
+
 model RawPost {
-  id          Int      @id @default(autoincrement())
-  redditId    String   @unique
+  id          Int       @id @default(autoincrement())
+  redditId    String    @unique
   subreddit   String
   title       String
   author      String?
   url         String
   permalink   String
-  selftext    String?  @db.LongText
+  selftext    String?   @db.LongText
   score       Int?
   numComments Int?
   createdUtc  DateTime?
-  fetchedAt   DateTime @default(now())
+
+  // quando l’ho visto per la prima volta (serve per mettere i nuovi "sotto")
+  firstSeenAt DateTime  @default(now())
+
+  // ultimo aggiornamento da fetch (solo informativo)
+  fetchedAt   DateTime  @default(now())
+
+  // stato inbox
+  status      RawStatus @default(NEW)
+  statusAt    DateTime?
 
   @@index([subreddit])
+  @@index([status])
 }
 
 model SavedPost {
