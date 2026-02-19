@@ -6,7 +6,6 @@ const { summarizePostToMarkdownIT } = require("./ai");
 const prisma = new PrismaClient();
 const router = express.Router();
 
-
 router.post("/ingest/:subreddit", async (req, res) => {
     try {
         const subreddit = req.params.subreddit;
@@ -30,7 +29,6 @@ router.post("/ingest/:subreddit", async (req, res) => {
                     numComments: p.numComments,
                     createdUtc: p.createdUtc,
                     fetchedAt: new Date(),
-
                 },
                 create: {
                     redditId: p.redditId,
@@ -59,7 +57,6 @@ router.post("/ingest/:subreddit", async (req, res) => {
     }
 });
 
-
 router.get("/raw-posts", async (req, res) => {
     try {
         const items = await prisma.rawPost.findMany({
@@ -83,7 +80,6 @@ router.get("/raw-posts/:id", async (req, res) => {
     }
 });
 
-
 router.patch("/raw-posts/:id/dismiss", async (req, res) => {
     try {
         const id = Number(req.params.id);
@@ -102,7 +98,6 @@ router.patch("/raw-posts/:id/dismiss", async (req, res) => {
     }
 });
 
-
 router.post("/raw-posts/:id/summarize", async (req, res) => {
     try {
         const id = Number(req.params.id);
@@ -116,10 +111,10 @@ router.post("/raw-posts/:id/summarize", async (req, res) => {
     }
 });
 
-
 router.post("/raw-posts/:id/save", async (req, res) => {
     try {
         const id = Number(req.params.id);
+
         const post = await prisma.rawPost.findUnique({ where: { id } });
         if (!post) return res.status(404).json({ ok: false, error: "Not found" });
 
@@ -130,23 +125,12 @@ router.post("/raw-posts/:id/save", async (req, res) => {
 
         const saved = await prisma.$transaction(async (tx) => {
             const savedRow = await tx.savedPost.upsert({
-                where: { redditId: post.redditId },
+                where: { rawPostId: post.id },
                 update: {
                     summaryMd,
-                    savedAt: new Date(),
                 },
                 create: {
-                    redditId: post.redditId,
-                    subreddit: post.subreddit,
-                    title: post.title,
-                    author: post.author,
-                    url: post.url,
-                    permalink: post.permalink,
-                    selftext: post.selftext,
-                    score: post.score,
-                    numComments: post.numComments,
-                    createdUtc: post.createdUtc,
-                    fetchedAt: post.fetchedAt,
+                    rawPostId: post.id,
                     summaryMd,
                 },
             });
@@ -171,6 +155,7 @@ router.post("/raw-posts/:id/save", async (req, res) => {
 router.get("/saved-posts", async (req, res) => {
     try {
         const items = await prisma.savedPost.findMany({
+            include: { rawPost: true },
             orderBy: { savedAt: "desc" },
         });
         res.json(items);
