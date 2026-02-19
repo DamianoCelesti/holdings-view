@@ -13,10 +13,11 @@ export async function ingestSubreddit(subreddit) {
     return res.json();
 }
 
-export async function getRawPosts() {
+export async function getNewPosts() {
     const res = await fetch(`${BASE_URL}/raw-posts`);
     return res.json();
 }
+
 
 export async function summarizePost(id) {
     const res = await fetch(`${BASE_URL}/raw-posts/${id}/summarize`, {
@@ -40,7 +41,7 @@ export async function getSavedPosts() {
 }
 
 
-export async function dismissRawPost(id) {
+export async function dismissNewPost(id) {
     const res = await fetch(`${BASE_URL}/raw-posts/${id}/dismiss`, {
         method: "PATCH",
     });
