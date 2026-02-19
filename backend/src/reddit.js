@@ -1,18 +1,35 @@
-async function fetchHotPosts(subreddit, limit = 25) {
-    const url = `https://www.reddit.com/r/${encodeURIComponent(
-        subreddit
-    )}/hot.json?limit=${limit}`;
-
-
+async function fetchJsonWithHeaders(url) {
     const resp = await fetch(url, {
-        headers: { "User-Agent": "hw-be/0.1 (by u/anonymous)" },
+        headers: {
+
+            "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) hw-be/0.1",
+            "Accept": "application/json,text/plain,*/*",
+            "Accept-Language": "en-US,en;q=0.9,it;q=0.8",
+        },
     });
 
     if (!resp.ok) {
-        throw new Error(`Reddit error ${resp.status} ${resp.statusText}`);
+        const text = await resp.text().catch(() => "");
+        throw new Error(`Reddit error ${resp.status} ${resp.statusText} :: ${text.slice(0, 200)}`);
     }
 
-    const json = await resp.json();
+    return resp.json();
+}
+
+async function fetchHotPosts(subreddit, limit = 25) {
+    const sub = encodeURIComponent(subreddit);
+    const base1 = `https://www.reddit.com/r/${sub}/hot.json?limit=${limit}&raw_json=1`;
+    const base2 = `https://old.reddit.com/r/${sub}/hot.json?limit=${limit}&raw_json=1`;
+
+    let json;
+    try {
+        json = await fetchJsonWithHeaders(base1);
+    } catch (e) {
+
+        json = await fetchJsonWithHeaders(base2);
+    }
+
     const children = json?.data?.children || [];
 
     return children

@@ -14,7 +14,8 @@ router.post("/ingest/:subreddit", async (req, res) => {
 
         const posts = await fetchHotPosts(subreddit, limit);
 
-        let upserted = 0;
+        let processed = 0;
+
         for (const p of posts) {
             await prisma.rawPost.upsert({
                 where: { redditId: p.redditId },
@@ -29,6 +30,7 @@ router.post("/ingest/:subreddit", async (req, res) => {
                     numComments: p.numComments,
                     createdUtc: p.createdUtc,
                     fetchedAt: new Date(),
+
                 },
                 create: {
                     redditId: p.redditId,
@@ -41,13 +43,17 @@ router.post("/ingest/:subreddit", async (req, res) => {
                     score: p.score,
                     numComments: p.numComments,
                     createdUtc: p.createdUtc,
+                    firstSeenAt: new Date(),
                     fetchedAt: new Date(),
+                    status: "NEW",
+                    statusAt: new Date(),
                 },
             });
-            upserted++;
+
+            processed++;
         }
 
-        res.json({ ok: true, subreddit, count: upserted });
+        res.json({ ok: true, subreddit, count: processed });
     } catch (err) {
         res.status(500).json({ ok: false, error: String(err.message || err) });
     }
@@ -55,18 +61,45 @@ router.post("/ingest/:subreddit", async (req, res) => {
 
 
 router.get("/raw-posts", async (req, res) => {
-    const items = await prisma.rawPost.findMany({
-        orderBy: { fetchedAt: "desc" },
-    });
-    res.json(items);
+    try {
+        const items = await prisma.rawPost.findMany({
+            where: { status: "NEW" },
+            orderBy: { firstSeenAt: "asc" },
+        });
+        res.json(items);
+    } catch (err) {
+        res.status(500).json({ ok: false, error: String(err.message || err) });
+    }
+});
+
+router.get("/raw-posts/:id", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        const item = await prisma.rawPost.findUnique({ where: { id } });
+        if (!item) return res.status(404).json({ ok: false, error: "Not found" });
+        res.json(item);
+    } catch (err) {
+        res.status(500).json({ ok: false, error: String(err.message || err) });
+    }
 });
 
 
-router.get("/raw-posts/:id", async (req, res) => {
-    const id = Number(req.params.id);
-    const item = await prisma.rawPost.findUnique({ where: { id } });
-    if (!item) return res.status(404).json({ ok: false, error: "Not found" });
-    res.json(item);
+router.patch("/raw-posts/:id/dismiss", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+
+        const updated = await prisma.rawPost.update({
+            where: { id },
+            data: {
+                status: "DISMISSED",
+                statusAt: new Date(),
+            },
+        });
+
+        res.json({ ok: true, id: updated.id });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: String(err.message || err) });
+    }
 });
 
 
@@ -95,26 +128,38 @@ router.post("/raw-posts/:id/save", async (req, res) => {
             return res.status(400).json({ ok: false, error: "summaryMd required" });
         }
 
-        const saved = await prisma.savedPost.upsert({
-            where: { redditId: post.redditId },
-            update: {
-                summaryMd,
-                savedAt: new Date(),
-            },
-            create: {
-                redditId: post.redditId,
-                subreddit: post.subreddit,
-                title: post.title,
-                author: post.author,
-                url: post.url,
-                permalink: post.permalink,
-                selftext: post.selftext,
-                score: post.score,
-                numComments: post.numComments,
-                createdUtc: post.createdUtc,
-                fetchedAt: post.fetchedAt,
-                summaryMd,
-            },
+        const saved = await prisma.$transaction(async (tx) => {
+            const savedRow = await tx.savedPost.upsert({
+                where: { redditId: post.redditId },
+                update: {
+                    summaryMd,
+                    savedAt: new Date(),
+                },
+                create: {
+                    redditId: post.redditId,
+                    subreddit: post.subreddit,
+                    title: post.title,
+                    author: post.author,
+                    url: post.url,
+                    permalink: post.permalink,
+                    selftext: post.selftext,
+                    score: post.score,
+                    numComments: post.numComments,
+                    createdUtc: post.createdUtc,
+                    fetchedAt: post.fetchedAt,
+                    summaryMd,
+                },
+            });
+
+            await tx.rawPost.update({
+                where: { id: post.id },
+                data: {
+                    status: "SAVED",
+                    statusAt: new Date(),
+                },
+            });
+
+            return savedRow;
         });
 
         res.json({ ok: true, savedId: saved.id });
@@ -123,12 +168,15 @@ router.post("/raw-posts/:id/save", async (req, res) => {
     }
 });
 
-
 router.get("/saved-posts", async (req, res) => {
-    const items = await prisma.savedPost.findMany({
-        orderBy: { savedAt: "desc" },
-    });
-    res.json(items);
+    try {
+        const items = await prisma.savedPost.findMany({
+            orderBy: { savedAt: "desc" },
+        });
+        res.json(items);
+    } catch (err) {
+        res.status(500).json({ ok: false, error: String(err.message || err) });
+    }
 });
 
 module.exports = router;
