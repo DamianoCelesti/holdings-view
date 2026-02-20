@@ -57,12 +57,32 @@ router.post("/ingest/:subreddit", async (req, res) => {
     }
 });
 
+
 router.get("/raw-posts", async (req, res) => {
     try {
+        const status = String(req.query.status || "NEW");
+        const allowed = new Set(["NEW", "DISMISSED", "SAVED"]);
+        const statusFilter = allowed.has(status) ? status : "NEW";
+
         const items = await prisma.rawPost.findMany({
-            where: { status: "NEW" },
+            where: { status: statusFilter },
             orderBy: { firstSeenAt: "asc" },
         });
+
+        res.json(items);
+    } catch (err) {
+        res.status(500).json({ ok: false, error: String(err.message || err) });
+    }
+});
+
+
+router.get("/dismissed-posts", async (req, res) => {
+    try {
+        const items = await prisma.rawPost.findMany({
+            where: { status: "DISMISSED" },
+            orderBy: { statusAt: "desc" },
+        });
+
         res.json(items);
     } catch (err) {
         res.status(500).json({ ok: false, error: String(err.message || err) });
@@ -88,6 +108,25 @@ router.patch("/raw-posts/:id/dismiss", async (req, res) => {
             where: { id },
             data: {
                 status: "DISMISSED",
+                statusAt: new Date(),
+            },
+        });
+
+        res.json({ ok: true, id: updated.id });
+    } catch (err) {
+        res.status(500).json({ ok: false, error: String(err.message || err) });
+    }
+});
+
+
+router.patch("/raw-posts/:id/restore", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+
+        const updated = await prisma.rawPost.update({
+            where: { id },
+            data: {
+                status: "NEW",
                 statusAt: new Date(),
             },
         });
@@ -126,13 +165,8 @@ router.post("/raw-posts/:id/save", async (req, res) => {
         const saved = await prisma.$transaction(async (tx) => {
             const savedRow = await tx.savedPost.upsert({
                 where: { rawPostId: post.id },
-                update: {
-                    summaryMd,
-                },
-                create: {
-                    rawPostId: post.id,
-                    summaryMd,
-                },
+                update: { summaryMd },
+                create: { rawPostId: post.id, summaryMd },
             });
 
             await tx.rawPost.update({
@@ -159,6 +193,32 @@ router.get("/saved-posts", async (req, res) => {
             orderBy: { savedAt: "desc" },
         });
         res.json(items);
+    } catch (err) {
+        res.status(500).json({ ok: false, error: String(err.message || err) });
+    }
+});
+
+
+router.delete("/saved-posts/:id", async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+
+        const existing = await prisma.savedPost.findUnique({ where: { id } });
+        if (!existing) return res.status(404).json({ ok: false, error: "Not found" });
+
+        await prisma.$transaction(async (tx) => {
+            await tx.savedPost.delete({ where: { id } });
+
+            await tx.rawPost.update({
+                where: { id: existing.rawPostId },
+                data: {
+                    status: "DISMISSED",
+                    statusAt: new Date(),
+                },
+            });
+        });
+
+        res.json({ ok: true, id });
     } catch (err) {
         res.status(500).json({ ok: false, error: String(err.message || err) });
     }

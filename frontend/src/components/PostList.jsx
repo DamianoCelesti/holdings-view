@@ -1,12 +1,12 @@
 import PostCard from "./PostCard";
 
-export default function PostList({ posts, onRemove }) {
+export default function PostList({ posts, onRemove, mode }) {
     if (!posts.length) return <p>Nessun post.</p>;
 
     return (
         <div>
             {posts.map((post) => (
-                <PostCard key={post.id} post={post} onRemove={onRemove} />
+                <PostCard key={post.id} post={post} onRemove={onRemove} mode={mode} />
             ))}
         </div>
     );

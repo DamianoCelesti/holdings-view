@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ingestSubreddit, getNewPosts, getSavedPosts } from "./api";
+import { ingestSubreddit, getNewPosts, getSavedPosts, getDismissedPosts } from "./api";
 import PostList from "./components/PostList";
 import SavedList from "./components/SavedList";
 
@@ -7,6 +7,7 @@ export default function App() {
   const [subreddit, setSubreddit] = useState("");
   const [newPosts, setNewPosts] = useState([]);
   const [saved, setSaved] = useState([]);
+  const [dismissed, setDismissed] = useState([]);
   const [view, setView] = useState("new");
   const [loading, setLoading] = useState(false);
 
@@ -59,8 +60,30 @@ export default function App() {
     }
   }
 
+  async function loadDismissed() {
+    try {
+      setLoading(true);
+      const data = await getDismissedPosts();
+      setDismissed(data);
+      setView("dismissed");
+    } catch (err) {
+      console.error("Errore loadDismissed:", err);
+      alert("Errore nel caricare i visualizzati");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function handleRemoveNewPost(id) {
     setNewPosts((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  function handleRemoveDismissedPost(id) {
+    setDismissed((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  function handleRemoveSavedPost(id) {
+    setSaved((prev) => prev.filter((p) => p.id !== id));
   }
 
   return (
@@ -85,19 +108,34 @@ export default function App() {
         <button onClick={loadSaved} disabled={loading}>
           Salvati
         </button>
+
+        <button onClick={loadDismissed} disabled={loading}>
+          Visualizzati
+        </button>
       </div>
 
       {view === "new" && (
         <>
           <p>Post da valutare: {newPosts.length}</p>
-          <PostList posts={newPosts} onRemove={handleRemoveNewPost} />
+          <PostList posts={newPosts} onRemove={handleRemoveNewPost} mode="new" />
         </>
       )}
 
       {view === "saved" && (
         <>
           <p>Post salvati: {saved.length}</p>
-          <SavedList posts={saved} />
+          <SavedList posts={saved} onRemove={handleRemoveSavedPost} />
+        </>
+      )}
+
+      {view === "dismissed" && (
+        <>
+          <p>Visualizzati (recuperabili): {dismissed.length}</p>
+          <PostList
+            posts={dismissed}
+            onRemove={handleRemoveDismissedPost}
+            mode="dismissed"
+          />
         </>
       )}
     </div>

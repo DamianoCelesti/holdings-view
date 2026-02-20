@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { summarizePost, savePost, dismissNewPost } from "../api";
+import { summarizePost, savePost, dismissNewPost, restoreDismissedPost } from "../api";
 
-export default function PostCard({ post, onRemove }) {
+export default function PostCard({ post, onRemove, mode = "new" }) {
     const [summary, setSummary] = useState("");
     const [loadingSummary, setLoadingSummary] = useState(false);
     const [saving, setSaving] = useState(false);
     const [dismissing, setDismissing] = useState(false);
     const [showOriginal, setShowOriginal] = useState(false);
+    const [restoring, setRestoring] = useState(false);
 
     async function handleSummarize() {
         try {
@@ -63,49 +64,59 @@ export default function PostCard({ post, onRemove }) {
         }
     }
 
+    async function handleRestore() {
+        try {
+            setRestoring(true);
+            const res = await restoreDismissedPost(post.id);
+            if (!res?.ok) {
+                alert(res?.error || "Errore nel ripristinare il post");
+                return;
+            }
+
+            onRemove?.(post.id);
+        } catch (err) {
+            console.error("restore error:", err);
+            alert("Errore nel ripristinare il post");
+        } finally {
+            setRestoring(false);
+        }
+    }
+
     const originalText = post.selftext?.trim();
     const isLinkOnly = !originalText;
 
     return (
-        <div className="post-card">
-            <h3 className="post-title">{post.title}</h3>
+        <div>
+            <h3>{post.title}</h3>
 
-            <p className="post-meta">
+            <p>
                 Score: {post.score ?? 0} — Commenti: {post.numComments ?? 0}
             </p>
 
-
-            <div className="post-links">
-                <a
-                    className="post-link"
-                    href={post.permalink || post.url}
-                    target="_blank"
-                    rel="noreferrer"
-                >
+            <div>
+                <a href={post.permalink || post.url} target="_blank" rel="noreferrer">
                     Apri su Reddit
                 </a>
 
-                <button
-                    className="btn"
-                    type="button"
-                    onClick={() => setShowOriginal((v) => !v)}
-                >
+                <button type="button" onClick={() => setShowOriginal((v) => !v)}>
                     {showOriginal ? "Nascondi testo" : "Testo originale"}
                 </button>
             </div>
 
-            <div className="post-actions">
-                <button
-                    className="btn"
-                    type="button"
-                    onClick={handleDismiss}
-                    disabled={dismissing || saving}
-                >
-                    {dismissing ? "..." : "Visualizzato"}
-                </button>
+            <div>
+                {mode === "new" && (
+                    <button type="button" onClick={handleDismiss} disabled={dismissing || saving}>
+                        {dismissing ? "..." : "Visualizzato"}
+                    </button>
+                )}
+
+                {mode === "dismissed" && (
+                    <button type="button" onClick={handleRestore} disabled={restoring}>
+                        {restoring ? "..." : "Ripristina tra i nuovi"}
+                    </button>
+                )}
 
                 <button
-                    className="btn"
                     type="button"
                     onClick={handleSummarize}
                     disabled={loadingSummary || saving}
@@ -113,30 +124,22 @@ export default function PostCard({ post, onRemove }) {
                     {loadingSummary ? "..." : "Riassumi (IT)"}
                 </button>
 
-                <button
-                    className="btn btn-primary"
-                    type="button"
-                    onClick={handleSave}
-                    disabled={!summary || saving}
-                >
+                <button type="button" onClick={handleSave} disabled={!summary || saving}>
                     {saving ? "..." : "Salva"}
                 </button>
             </div>
 
-
             {showOriginal && (
-                <div className="post-original">
-                    <h4 className="post-section-title">Testo originale</h4>
-                    <pre className="post-pre">
-                        {isLinkOnly ? "(nessun testo, solo link)" : originalText}
-                    </pre>
+                <div>
+                    <h4>Testo originale</h4>
+                    <pre>{isLinkOnly ? "(nessun testo, solo link)" : originalText}</pre>
                 </div>
             )}
 
             {summary && (
-                <div className="post-summary">
-                    <h4 className="post-section-title">Riassunto</h4>
-                    <pre className="post-pre">{summary}</pre>
+                <div>
+                    <h4>Riassunto</h4>
+                    <pre>{summary}</pre>
                 </div>
             )}
         </div>

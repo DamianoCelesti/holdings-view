@@ -14,10 +14,14 @@ export async function ingestSubreddit(subreddit) {
 }
 
 export async function getNewPosts() {
-    const res = await fetch(`${BASE_URL}/raw-posts`);
+    const res = await fetch(`${BASE_URL}/raw-posts?status=NEW`);
     return res.json();
 }
 
+export async function getDismissedPosts() {
+    const res = await fetch(`${BASE_URL}/dismissed-posts`);
+    return res.json();
+}
 
 export async function summarizePost(id) {
     const res = await fetch(`${BASE_URL}/raw-posts/${id}/summarize`, {
@@ -40,9 +44,22 @@ export async function getSavedPosts() {
     return res.json();
 }
 
+export async function deleteSavedPost(id) {
+    const res = await fetch(`${BASE_URL}/saved-posts/${id}`, {
+        method: "DELETE",
+    });
+    return res.json();
+}
 
 export async function dismissNewPost(id) {
     const res = await fetch(`${BASE_URL}/raw-posts/${id}/dismiss`, {
+        method: "PATCH",
+    });
+    return res.json();
+}
+
+export async function restoreDismissedPost(id) {
+    const res = await fetch(`${BASE_URL}/raw-posts/${id}/restore`, {
         method: "PATCH",
     });
     return res.json();
