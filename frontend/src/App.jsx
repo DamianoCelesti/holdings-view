@@ -87,29 +87,30 @@ export default function App() {
   }
 
   return (
-    <div>
+    <div className="container">
       <h1>AI Reddit Dashboard</h1>
 
-      <div>
+      <div className="nav">
         <input
+          className="input"
           placeholder="es. stocks"
           value={subreddit}
           onChange={(e) => setSubreddit(e.target.value)}
         />
 
-        <button onClick={handleFetch} disabled={loading || !subreddit.trim()}>
+        <button className="button button-primary" onClick={handleFetch} disabled={loading || !subreddit.trim()}>
           {loading ? "Loading..." : "Fetch"}
         </button>
 
-        <button onClick={loadNewPosts} disabled={loading}>
+        <button className="button button-secondary" onClick={loadNewPosts} disabled={loading}>
           Nuovi post da vedere
         </button>
 
-        <button onClick={loadSaved} disabled={loading}>
+        <button className="button button-secondary" onClick={loadSaved} disabled={loading}>
           Salvati
         </button>
 
-        <button onClick={loadDismissed} disabled={loading}>
+        <button className="button button-secondary" onClick={loadDismissed} disabled={loading}>
           Visualizzati
         </button>
       </div>

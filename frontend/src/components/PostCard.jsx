@@ -86,10 +86,10 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
     const isLinkOnly = !originalText;
 
     return (
-        <div>
-            <h3>{post.title}</h3>
+        <div className="card">
+            <h3 className="card-title">{post.title}</h3>
 
-            <p>
+            <p className="card-meta">
                 Score: {post.score ?? 0} — Commenti: {post.numComments ?? 0}
             </p>
 
@@ -98,25 +98,26 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
                     Apri su Reddit
                 </a>
 
-                <button type="button" onClick={() => setShowOriginal((v) => !v)}>
+                <button className="button button-secondary" type="button" onClick={() => setShowOriginal((v) => !v)}>
                     {showOriginal ? "Nascondi testo" : "Testo originale"}
                 </button>
             </div>
 
             <div>
                 {mode === "new" && (
-                    <button type="button" onClick={handleDismiss} disabled={dismissing || saving}>
+                    <button className="button button-secondary" type="button" onClick={handleDismiss} disabled={dismissing || saving}>
                         {dismissing ? "..." : "Visualizzato"}
                     </button>
                 )}
 
                 {mode === "dismissed" && (
-                    <button type="button" onClick={handleRestore} disabled={restoring}>
+                    <button className="button button-secondary" type="button" onClick={handleRestore} disabled={restoring}>
                         {restoring ? "..." : "Ripristina tra i nuovi"}
                     </button>
                 )}
 
                 <button
+                    className="button button-primary"
                     type="button"
                     onClick={handleSummarize}
                     disabled={loadingSummary || saving}
@@ -124,20 +125,20 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
                     {loadingSummary ? "..." : "Riassumi (IT)"}
                 </button>
 
-                <button type="button" onClick={handleSave} disabled={!summary || saving}>
+                <button className="button button-primary" type="button" onClick={handleSave} disabled={!summary || saving}>
                     {saving ? "..." : "Salva"}
                 </button>
             </div>
 
             {showOriginal && (
-                <div>
+                <div className="card-content">
                     <h4>Testo originale</h4>
                     <pre>{isLinkOnly ? "(nessun testo, solo link)" : originalText}</pre>
                 </div>
             )}
 
             {summary && (
-                <div>
+                <div className="card-content">
                     <h4>Riassunto</h4>
                     <pre>{summary}</pre>
                 </div>
