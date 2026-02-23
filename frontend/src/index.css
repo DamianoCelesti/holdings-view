@@ -1,139 +1,121 @@
-/* ===== Reset & Base ===== */
+/* ===== Reset Base ===== */
 
-*,
-*::before,
-*::after {
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial, sans-serif;
-    background-color: #f5f5f5;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f4f4f4;
     color: #333;
     line-height: 1.6;
-    min-height: 100vh;
-}
-
-/* ===== Typography ===== */
-
-h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 1rem;
-}
-
-h2 {
-    font-size: 1.35rem;
-    font-weight: 600;
-    color: #2a2a2a;
-    margin-bottom: 0.75rem;
 }
 
 /* ===== Layout ===== */
 
 .container {
-    max-width: 960px;
+    max-width: 900px;
     margin: 0 auto;
-    padding: 2rem 1.5rem;
+    padding: 20px;
 }
 
-/* ===== Navigation ===== */
+/* ===== Titoli ===== */
+
+h1 {
+    margin-bottom: 20px;
+}
+
+h2 {
+    margin-bottom: 15px;
+}
+
+/* ===== Navbar ===== */
 
 .nav {
-    background-color: #fff;
-    padding: 1rem 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    background-color: white;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
 }
 
 /* ===== Card ===== */
 
 .card {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    padding: 1.5rem;
-    margin-bottom: 1.25rem;
+    background-color: white;
+    padding: 20px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
 }
 
 .card-title {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 0.35rem;
+    font-weight: bold;
+    margin-bottom: 5px;
 }
 
 .card-meta {
-    font-size: 0.85rem;
-    color: #888;
-    margin-bottom: 0.75rem;
+    font-size: 14px;
+    color: #777;
+    margin-bottom: 10px;
 }
 
 .card-content {
-    font-size: 0.95rem;
-    color: #444;
-    line-height: 1.65;
-}
-
-/* ===== Buttons ===== */
-
-.button {
-    display: inline-block;
-    padding: 0.5rem 1.15rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    cursor: pointer;
-    background-color: #fff;
-    color: #333;
-}
-
-.button:hover {
-    background-color: #f0f0f0;
-}
-
-.button-primary {
-    background-color: #3b82f6;
-    color: #fff;
-    border-color: #3b82f6;
-}
-
-.button-primary:hover {
-    background-color: #2563eb;
-    border-color: #2563eb;
-}
-
-.button-secondary {
-    background-color: #e5e7eb;
-    color: #333;
-    border-color: #d1d5db;
-}
-
-.button-secondary:hover {
-    background-color: #d1d5db;
+    font-size: 15px;
+    margin-bottom: 10px;
 }
 
 /* ===== Input ===== */
 
 .input {
-    display: block;
     width: 100%;
-    padding: 0.55rem 0.75rem;
-    font-size: 0.95rem;
+    padding: 8px;
     border: 1px solid #ccc;
-    border-radius: 6px;
-    outline: none;
-    color: #333;
-    background-color: #fff;
+    border-radius: 4px;
+    margin-bottom: 10px;
 }
 
-.input:focus {
+/* ===== Button ===== */
+
+.button {
+    padding: 8px 14px;
+    border: 1px solid #ccc;
+    background-color: #eee;
+    border-radius: 4px;
+    cursor: pointer;
+
+    /* Spazio tra i bottoni */
+    margin-right: 8px;
+    margin-bottom: 8px;
+}
+
+.button:hover {
+    background-color: #ddd;
+}
+
+/* Varianti semplici */
+
+.button-primary {
+    background-color: #3b82f6;
     border-color: #3b82f6;
+    color: white;
+}
+
+.button-primary:hover {
+    background-color: #2563eb;
+}
+
+.button-secondary {
+    background-color: #ccc;
+}
+
+.button-danger {
+    background-color: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+.button-danger:hover {
+    background-color: #dc2626;
 }
