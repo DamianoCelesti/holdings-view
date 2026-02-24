@@ -21,6 +21,10 @@ body {
     padding: 20px;
 }
 
+pre {
+    white-space: pre-wrap;
+}
+
 /* ===== Titoli ===== */
 
 h1 {
