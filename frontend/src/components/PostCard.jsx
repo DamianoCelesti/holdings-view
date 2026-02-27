@@ -1,25 +1,32 @@
 import { useState } from "react";
-import { summarizePost, savePost, dismissNewPost, restoreDismissedPost } from "../api";
+import {
+    summarizePost,
+    savePost,
+    dismissNewPost,
+    restoreDismissedPost,
+} from "../api";
 
 export default function PostCard({ post, onRemove, mode = "new" }) {
     const [summary, setSummary] = useState("");
     const [loadingSummary, setLoadingSummary] = useState(false);
     const [saving, setSaving] = useState(false);
     const [dismissing, setDismissing] = useState(false);
-    const [showOriginal, setShowOriginal] = useState(false);
     const [restoring, setRestoring] = useState(false);
+    const [showOriginal, setShowOriginal] = useState(false);
 
+    const originalText = post.selftext?.trim() || "";
+    const hasOriginalText = originalText.length > 0;
+
+    const redditUrl = post.permalink;
+    //console.log(post)
     async function handleSummarize() {
         try {
             setLoadingSummary(true);
-            const res = await summarizePost(post.id);
-            if (!res?.ok) {
-                alert(res?.error || "Errore durante il riassunto");
-                return;
-            }
-            setSummary(res.summaryMd || "");
+
+            const data = await summarizePost(post.id);
+            setSummary(data.summaryMd);
+
         } catch (err) {
-            console.error("summarize error:", err);
             alert("Errore durante il riassunto");
         } finally {
             setLoadingSummary(false);
@@ -31,16 +38,11 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
 
         try {
             setSaving(true);
-            const res = await savePost(post.id, summary);
-            if (!res?.ok) {
-                alert(res?.error || "Errore durante il salvataggio");
-                return;
-            }
-
+            await savePost(post.id, summary);
             onRemove?.(post.id);
         } catch (err) {
             console.error("save error:", err);
-            alert("Errore durante il salvataggio");
+            alert(err.message || "Errore durante il salvataggio");
         } finally {
             setSaving(false);
         }
@@ -49,16 +51,11 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
     async function handleDismiss() {
         try {
             setDismissing(true);
-            const res = await dismissNewPost(post.id);
-            if (!res?.ok) {
-                alert(res?.error || "Errore nel segnare come visualizzato");
-                return;
-            }
-
+            await dismissNewPost(post.id);
             onRemove?.(post.id);
         } catch (err) {
             console.error("dismiss error:", err);
-            alert("Errore nel segnare come visualizzato");
+            alert(err.message || "Errore nel segnare come visualizzato");
         } finally {
             setDismissing(false);
         }
@@ -67,23 +64,20 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
     async function handleRestore() {
         try {
             setRestoring(true);
-            const res = await restoreDismissedPost(post.id);
-            if (!res?.ok) {
-                alert(res?.error || "Errore nel ripristinare il post");
-                return;
-            }
-
+            await restoreDismissedPost(post.id);
             onRemove?.(post.id);
         } catch (err) {
             console.error("restore error:", err);
-            alert("Errore nel ripristinare il post");
+            alert(err.message || "Errore nel ripristinare il post");
         } finally {
             setRestoring(false);
         }
     }
 
-    const originalText = post.selftext?.trim();
-    const isLinkOnly = !originalText;
+    const disableSummarize = loadingSummary || saving;
+    const disableSave = saving || !summary;
+    const disableDismiss = dismissing || saving || loadingSummary;
+    const disableRestore = restoring;
 
     return (
         <div className="card">
@@ -94,24 +88,38 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
             </p>
 
             <div>
-                <a href={post.permalink || post.url} target="_blank" rel="noreferrer">
+                <a href={redditUrl} target="_blank" rel="noreferrer">
                     Apri su Reddit
                 </a>
 
-                <button className="button button-secondary" type="button" onClick={() => setShowOriginal((v) => !v)}>
+                <button
+                    className="button button-secondary"
+                    type="button"
+                    onClick={() => setShowOriginal((v) => !v)}
+                >
                     {showOriginal ? "Nascondi testo" : "Testo originale"}
                 </button>
             </div>
 
             <div>
                 {mode === "new" && (
-                    <button className="button button-secondary" type="button" onClick={handleDismiss} disabled={dismissing || saving}>
+                    <button
+                        className="button button-secondary"
+                        type="button"
+                        onClick={handleDismiss}
+                        disabled={disableDismiss}
+                    >
                         {dismissing ? "..." : "Visualizzato"}
                     </button>
                 )}
 
                 {mode === "dismissed" && (
-                    <button className="button button-secondary" type="button" onClick={handleRestore} disabled={restoring}>
+                    <button
+                        className="button button-secondary"
+                        type="button"
+                        onClick={handleRestore}
+                        disabled={disableRestore}
+                    >
                         {restoring ? "..." : "Ripristina tra i nuovi"}
                     </button>
                 )}
@@ -120,12 +128,17 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
                     className="button button-primary"
                     type="button"
                     onClick={handleSummarize}
-                    disabled={loadingSummary || saving}
+                    disabled={disableSummarize}
                 >
                     {loadingSummary ? "..." : "Riassumi (IT)"}
                 </button>
 
-                <button className="button button-primary" type="button" onClick={handleSave} disabled={!summary || saving}>
+                <button
+                    className="button button-primary"
+                    type="button"
+                    onClick={handleSave}
+                    disabled={disableSave}
+                >
                     {saving ? "..." : "Salva"}
                 </button>
             </div>
@@ -133,7 +146,7 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
             {showOriginal && (
                 <div className="card-content">
                     <h4>Testo originale</h4>
-                    <pre>{isLinkOnly ? "(nessun testo, solo link)" : originalText}</pre>
+                    <pre>{hasOriginalText ? originalText : "(nessun testo, solo link)"}</pre>
                 </div>
             )}
 

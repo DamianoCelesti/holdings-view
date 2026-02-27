@@ -1,6 +1,6 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client");
-const { fetchHotPosts } = require("./reddit");
+const { fetchHotPosts, fetchTopComments } = require("./reddit");
 const { summarizePostToMarkdownIT } = require("./ai");
 
 const prisma = new PrismaClient();
@@ -143,8 +143,22 @@ router.post("/raw-posts/:id/summarize", async (req, res) => {
         const post = await prisma.rawPost.findUnique({ where: { id } });
         if (!post) return res.status(404).json({ ok: false, error: "Not found" });
 
-        const summaryMd = await summarizePostToMarkdownIT(post);
-        res.json({ ok: true, id, summaryMd });
+
+        let comments = [];
+        try {
+            comments = await fetchTopComments(post.permalink, { sort: "top", limit: 80 });
+        } catch (e) {
+            console.warn("fetchTopComments failed:", e.message);
+            comments = [];
+        }
+
+
+        const summaryMd = await summarizePostToMarkdownIT({
+            ...post,
+            comments,
+        });
+
+        res.json({ ok: true, id, summaryMd, commentsCount: comments.length });
     } catch (err) {
         res.status(500).json({ ok: false, error: String(err.message || err) });
     }
