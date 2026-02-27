@@ -18,8 +18,17 @@ export default function App() {
 
   const [view, setView] = useState("new");
   const [loading, setLoading] = useState("");
+  const [dark, setDark] = useState(false);
 
   const isLoading = loading !== "";
+
+  function toggleDarkMode() {
+    setDark((prev) => {
+      const next = !prev;
+      document.body.classList.toggle("dark", next);
+      return next;
+    });
+  }
 
   useEffect(() => {
     loadNewPosts();
@@ -100,6 +109,10 @@ export default function App() {
 
   return (
     <div className="container">
+      <button className="theme-toggle" onClick={toggleDarkMode}>
+        {dark ? "☀️" : "🌙"}
+      </button>
+
       <h1>AI Reddit Dashboard</h1>
 
       <div className="nav">
