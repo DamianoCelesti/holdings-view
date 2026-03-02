@@ -130,7 +130,7 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
                     onClick={handleSummarize}
                     disabled={disableSummarize}
                 >
-                    {loadingSummary ? "..." : "Riassumi (IT)"}
+                    {loadingSummary ? "..." : "Riassumi"}
                 </button>
 
                 <button
