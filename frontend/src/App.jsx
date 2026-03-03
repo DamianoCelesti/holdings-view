@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+
 import {
   ingestSubreddit,
   getNewPosts,
@@ -8,15 +10,19 @@ import {
 
 import PostList from "./components/PostList";
 import SavedList from "./components/SavedList";
+import NavBar from "./components/NavBar";
 
 export default function App() {
+  const location = useLocation();
+
   const [subreddit, setSubreddit] = useState("");
 
-  const [newPosts, setNewPosts] = useState([]);
-  const [savedPosts, setSavedPosts] = useState([]);
-  const [dismissedPosts, setDismissedPosts] = useState([]);
+  const [postsByPage, setPostsByPage] = useState({
+    new: [],
+    saved: [],
+    dismissed: [],
+  });
 
-  const [view, setView] = useState("new");
   const [loading, setLoading] = useState("");
   const [dark, setDark] = useState(false);
 
@@ -30,51 +36,36 @@ export default function App() {
     });
   }
 
+  function getPageKey(pathname) {
+    if (pathname === "/") return "new";
+    if (pathname === "/saved") return "saved";
+    if (pathname === "/dismissed") return "dismissed";
+    return null;
+  }
+
+  async function loadPage(pageKey) {
+    try {
+      setLoading(pageKey);
+
+      let data = [];
+      if (pageKey === "new") data = await getNewPosts();
+      if (pageKey === "saved") data = await getSavedPosts();
+      if (pageKey === "dismissed") data = await getDismissedPosts();
+
+      setPostsByPage((prev) => ({ ...prev, [pageKey]: data }));
+    } catch (err) {
+      console.error("loadPage error:", err);
+      alert("Errore nel caricare i post");
+    } finally {
+      setLoading("");
+    }
+  }
+
   useEffect(() => {
-    loadNewPosts();
-  }, []);
+    const pageKey = getPageKey(location.pathname);
+    if (pageKey) loadPage(pageKey);
 
-  async function loadNewPosts() {
-    try {
-      setLoading("new");
-      const data = await getNewPosts();
-      setNewPosts(data);
-      setView("new");
-    } catch (err) {
-      console.error("loadNewPosts error:", err);
-      alert("Errore nel caricare i post nuovi");
-    } finally {
-      setLoading("");
-    }
-  }
-
-  async function loadSavedPosts() {
-    try {
-      setLoading("saved");
-      const data = await getSavedPosts();
-      setSavedPosts(data);
-      setView("saved");
-    } catch (err) {
-      console.error("loadSavedPosts error:", err);
-      alert("Errore nel caricare i post salvati");
-    } finally {
-      setLoading("");
-    }
-  }
-
-  async function loadDismissedPosts() {
-    try {
-      setLoading("dismissed");
-      const data = await getDismissedPosts();
-      setDismissedPosts(data);
-      setView("dismissed");
-    } catch (err) {
-      console.error("loadDismissedPosts error:", err);
-      alert("Errore nel caricare i visualizzati");
-    } finally {
-      setLoading("");
-    }
-  }
+  }, [location.pathname]);
 
   async function handleFetch() {
     const cleanSubreddit = subreddit.trim();
@@ -85,8 +76,7 @@ export default function App() {
       await ingestSubreddit(cleanSubreddit);
 
       const data = await getNewPosts();
-      setNewPosts(data);
-      setView("new");
+      setPostsByPage((prev) => ({ ...prev, new: data }));
     } catch (err) {
       console.error("handleFetch error:", err);
       alert("Errore durante il fetch/ingest");
@@ -95,17 +85,16 @@ export default function App() {
     }
   }
 
-  function removeFromNew(id) {
-    setNewPosts((prev) => prev.filter((p) => p.id !== id));
+  function removeFromPage(pageKey, id) {
+    setPostsByPage((prev) => ({
+      ...prev,
+      [pageKey]: prev[pageKey].filter((p) => p.id !== id),
+    }));
   }
 
-  function removeFromSaved(id) {
-    setSavedPosts((prev) => prev.filter((p) => p.id !== id));
-  }
-
-  function removeFromDismissed(id) {
-    setDismissedPosts((prev) => prev.filter((p) => p.id !== id));
-  }
+  const newPosts = postsByPage.new;
+  const savedPosts = postsByPage.saved;
+  const dismissedPosts = postsByPage.dismissed;
 
   return (
     <div className="container">
@@ -115,71 +104,58 @@ export default function App() {
 
       <h1>AI Reddit Dashboard</h1>
 
-      <div className="nav">
-        <input
-          className="input"
-          placeholder="es. stocks"
-          value={subreddit}
-          onChange={(e) => setSubreddit(e.target.value)}
+      <NavBar
+        subreddit={subreddit}
+        setSubreddit={setSubreddit}
+        onFetch={handleFetch}
+        loading={loading}
+        isLoading={isLoading}
+      />
+
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <p>Post da valutare: {newPosts.length}</p>
+              <PostList
+                posts={newPosts}
+                onRemove={(id) => removeFromPage("new", id)}
+                mode="new"
+              />
+            </>
+          }
         />
 
-        <button
-          className="button button-primary"
-          onClick={handleFetch}
-          disabled={isLoading || !subreddit.trim()}
-        >
-          {loading === "fetch" ? "Loading..." : "Fetch"}
-        </button>
+        <Route
+          path="/saved"
+          element={
+            <>
+              <p>Post salvati: {savedPosts.length}</p>
+              <SavedList
+                posts={savedPosts}
+                onRemove={(id) => removeFromPage("saved", id)}
+              />
+            </>
+          }
+        />
 
-        <button
-          className="button button-secondary"
-          onClick={loadNewPosts}
-          disabled={isLoading}
-        >
-          {loading === "new" ? "Loading..." : "Nuovi post da vedere"}
-        </button>
+        <Route
+          path="/dismissed"
+          element={
+            <>
+              <p>Visualizzati (recuperabili): {dismissedPosts.length}</p>
+              <PostList
+                posts={dismissedPosts}
+                onRemove={(id) => removeFromPage("dismissed", id)}
+                mode="dismissed"
+              />
+            </>
+          }
+        />
 
-        <button
-          className="button button-secondary"
-          onClick={loadSavedPosts}
-          disabled={isLoading}
-        >
-          {loading === "saved" ? "Loading..." : "Salvati"}
-        </button>
-
-        <button
-          className="button button-secondary"
-          onClick={loadDismissedPosts}
-          disabled={isLoading}
-        >
-          {loading === "dismissed" ? "Loading..." : "Visualizzati"}
-        </button>
-      </div>
-
-      {view === "new" && (
-        <>
-          <p>Post da valutare: {newPosts.length}</p>
-          <PostList posts={newPosts} onRemove={removeFromNew} mode="new" />
-        </>
-      )}
-
-      {view === "saved" && (
-        <>
-          <p>Post salvati: {savedPosts.length}</p>
-          <SavedList posts={savedPosts} onRemove={removeFromSaved} />
-        </>
-      )}
-
-      {view === "dismissed" && (
-        <>
-          <p>Visualizzati (recuperabili): {dismissedPosts.length}</p>
-          <PostList
-            posts={dismissedPosts}
-            onRemove={removeFromDismissed}
-            mode="dismissed"
-          />
-        </>
-      )}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </div>
   );
 }

@@ -25,12 +25,12 @@ export default function SavedList({ posts = [], onRemove }) {
                         <h3 className="card-title">{raw?.title}</h3>
 
                         <div>
-                            <a href={redditUrl} target="_blank" rel="noreferrer">
+                            <a className="button button-secondary" href={redditUrl} target="_blank" rel="noreferrer">
                                 Apri su Reddit
                             </a>
 
                             <button
-                                className="button button-secondary"
+                                className="button button-danger"
                                 onClick={() => handleDelete(post.id)}
                             >
                                 Elimina
