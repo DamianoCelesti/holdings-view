@@ -1,12 +1,27 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { ingestSubreddit } from "../api";
 
-export default function NavBar({
-    subreddit,
-    setSubreddit,
-    onFetch,
-    loading,
-    isLoading,
-}) {
+export default function NavBar({ subreddit, setSubreddit, onFetched }) {
+    const navigate = useNavigate();
+
+    async function handleFetch() {
+        const clean = subreddit.trim();
+        if (!clean) return;
+
+        try {
+            await ingestSubreddit(clean);
+
+
+            navigate("/");
+
+
+            onFetched?.();
+        } catch (err) {
+            console.error("fetch/ingest error:", err);
+            alert("Errore durante il fetch/ingest");
+        }
+    }
+
     return (
         <div className="nav">
             <input
@@ -18,10 +33,10 @@ export default function NavBar({
 
             <button
                 className="button button-primary"
-                onClick={onFetch}
-                disabled={isLoading || !subreddit.trim()}
+                onClick={handleFetch}
+                disabled={!subreddit.trim()}
             >
-                {loading === "fetch" ? "Loading..." : "Fetch"}
+                Fetch
             </button>
 
             <NavLink
@@ -31,7 +46,7 @@ export default function NavBar({
                     isActive ? "button button-primary" : "button button-secondary"
                 }
             >
-                {loading === "new" ? "Loading..." : "Nuovi"}
+                Nuovi
             </NavLink>
 
             <NavLink
@@ -40,7 +55,7 @@ export default function NavBar({
                     isActive ? "button button-primary" : "button button-secondary"
                 }
             >
-                {loading === "saved" ? "Loading..." : "Salvati"}
+                Salvati
             </NavLink>
 
             <NavLink
@@ -49,7 +64,7 @@ export default function NavBar({
                     isActive ? "button button-primary" : "button button-secondary"
                 }
             >
-                {loading === "dismissed" ? "Loading..." : "Visualizzati"}
+                Visualizzati
             </NavLink>
         </div>
     );

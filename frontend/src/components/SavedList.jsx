@@ -1,12 +1,20 @@
+import { useState } from "react";
 import { deleteSavedPost } from "../api";
 
 export default function SavedList({ posts = [], onRemove }) {
+    const [deletingId, setDeletingId] = useState(null);
+
     async function handleDelete(id) {
         try {
+            setDeletingId(id);
+
             await deleteSavedPost(id);
             onRemove?.(id);
+
         } catch (err) {
             alert("Errore durante l'eliminazione");
+        } finally {
+            setDeletingId(null);
         }
     }
 
@@ -25,15 +33,21 @@ export default function SavedList({ posts = [], onRemove }) {
                         <h3 className="card-title">{raw?.title}</h3>
 
                         <div>
-                            <a className="button button-secondary" href={redditUrl} target="_blank" rel="noreferrer">
+                            <a
+                                className="button button-secondary"
+                                href={redditUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                            >
                                 Apri su Reddit
                             </a>
 
                             <button
                                 className="button button-danger"
                                 onClick={() => handleDelete(post.id)}
+                                disabled={deletingId === post.id}
                             >
-                                Elimina
+                                {deletingId === post.id ? "..." : "Elimina"}
                             </button>
                         </div>
 

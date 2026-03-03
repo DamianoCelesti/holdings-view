@@ -88,7 +88,7 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
             </p>
 
             <div>
-                <a href={redditUrl} target="_blank" rel="noreferrer">
+                <a className="button button-secondary" href={redditUrl} target="_blank" rel="noreferrer">
                     Apri su Reddit
                 </a>
 
