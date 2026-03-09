@@ -6,7 +6,7 @@ export default function SavedPage({ refreshKey }) {
     const [posts, setPosts] = useState([]);
 
     useEffect(() => {
-        async function fetchPosts() {
+        async function fetchSaved() {
             try {
                 const res = await getSavedRawPosts();
                 setPosts(res);
@@ -16,7 +16,7 @@ export default function SavedPage({ refreshKey }) {
             }
         }
 
-        fetchPosts();
+        fetchSaved();
     }, [refreshKey]);
 
     function removeFromList(id) {

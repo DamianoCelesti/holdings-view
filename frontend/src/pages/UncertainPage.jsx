@@ -6,7 +6,7 @@ export default function UncertainPage({ refreshKey }) {
     const [posts, setPosts] = useState([]);
 
     useEffect(() => {
-        async function fetchPosts() {
+        async function loadUncertain() {
             try {
                 const res = await getUncertainPosts();
                 setPosts(res);
@@ -16,7 +16,7 @@ export default function UncertainPage({ refreshKey }) {
             }
         }
 
-        fetchPosts();
+        loadUncertain();
     }, [refreshKey]);
 
     function removeFromList(id) {
