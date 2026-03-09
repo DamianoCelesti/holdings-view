@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import { getSavedRawPosts } from "../api";
+import { getUncertainPosts } from "../api";
 import PostList from "../components/PostList";
 
-export default function SavedPage({ refreshKey }) {
+export default function UncertainPage({ refreshKey }) {
     const [posts, setPosts] = useState([]);
 
     useEffect(() => {
         async function fetchPosts() {
             try {
-                const res = await getSavedRawPosts();
+                const res = await getUncertainPosts();
                 setPosts(res);
             } catch (e) {
                 console.error(e);
-                alert("Errore nel caricare i post salvati");
+                alert("Errore nel caricare i post incerti");
             }
         }
 
@@ -26,8 +26,8 @@ export default function SavedPage({ refreshKey }) {
 
     return (
         <>
-            <p>Post SAVED: {posts.length}</p>
-            <PostList posts={posts} onRemove={removeFromList} mode="saved" />
+            <p>Post UNCERTAIN: {posts.length}</p>
+            <PostList posts={posts} onRemove={removeFromList} mode="uncertain" />
         </>
     );
 }
