@@ -1,125 +1,88 @@
 const BASE_URL = "http://localhost:3001/api";
 
-// -------- INGEST --------
 
-export async function ingestSubreddit(subreddit) {
-    const res = await fetch(`${BASE_URL}/ingest/${subreddit}`, {
-        method: "POST",
-    });
-
+async function handleResponse(res, fallbackMessage) {
     if (!res.ok) {
-        throw new Error("Errore durante il fetch del subreddit");
+        let message = fallbackMessage;
+
+        try {
+            const data = await res.json();
+            if (data && data.error) {
+                message = data.error;
+            }
+        } catch (e) {
+            console.log("response parse error");
+        }
+
+        throw new Error(message);
     }
 
     return res.json();
 }
 
-// -------- NEW POSTS --------
+export async function processNew(limit) {
+    const res = await fetch(`${BASE_URL}/process-new`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(limit ? { limit } : {}),
+    });
+
+    return handleResponse(res, "Errore durante l'analisi GPU");
+}
+
+export async function getRawPostsByStatus(status) {
+    const res = await fetch(`${BASE_URL}/raw-posts?status=${encodeURIComponent(status)}`);
+    return handleResponse(res, "Errore nel caricamento dei post");
+}
 
 export async function getNewPosts() {
-    const res = await fetch(`${BASE_URL}/raw-posts?status=NEW`);
-
-    if (!res.ok) {
-        throw new Error("Errore nel caricare i post nuovi");
-    }
-
-    return res.json();
+    return getRawPostsByStatus("NEW");
 }
 
-// -------- DISMISSED POSTS --------
+export async function getUncertainPosts() {
+    return getRawPostsByStatus("UNCERTAIN");
+}
+
+export async function getSavedRawPosts() {
+    return getRawPostsByStatus("SAVED");
+}
 
 export async function getDismissedPosts() {
-    const res = await fetch(`${BASE_URL}/dismissed-posts`);
-
-    if (!res.ok) {
-        throw new Error("Errore nel caricare i post visualizzati");
-    }
-
-    return res.json();
+    return getRawPostsByStatus("DISMISSED");
 }
 
-// -------- SUMMARIZE --------
+export async function saveRawPost(id, summaryMd) {
+    const payload = {};
 
-export async function summarizePost(id) {
-    const res = await fetch(`${BASE_URL}/raw-posts/${id}/summarize`, {
-        method: "POST",
-    });
-
-    if (!res.ok) {
-        throw new Error("Errore durante il riassunto");
+    if (summaryMd) {
+        payload.summaryMd = summaryMd;
     }
 
-    return res.json();
-}
-
-// -------- SAVE --------
-
-export async function savePost(id, summaryMd) {
     const res = await fetch(`${BASE_URL}/raw-posts/${id}/save`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ summaryMd }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
     });
 
-    if (!res.ok) {
-        throw new Error("Errore durante il salvataggio");
-    }
-
-    return res.json();
+    return handleResponse(res, "Errore durante il salvataggio");
 }
 
-// -------- SAVED POSTS --------
-
-export async function getSavedPosts() {
-    const res = await fetch(`${BASE_URL}/saved-posts`);
-
-    if (!res.ok) {
-        throw new Error("Errore nel caricare i post salvati");
-    }
-
-    return res.json();
-}
-
-// -------- DELETE SAVED --------
-
-export async function deleteSavedPost(id) {
-    const res = await fetch(`${BASE_URL}/saved-posts/${id}`, {
-        method: "DELETE",
-    });
-
-    if (!res.ok) {
-        throw new Error("Errore durante l'eliminazione");
-    }
-
-    return res.json();
-}
-
-// -------- DISMISS --------
-
-export async function dismissNewPost(id) {
+export async function dismissRawPost(id) {
     const res = await fetch(`${BASE_URL}/raw-posts/${id}/dismiss`, {
         method: "PATCH",
     });
 
-    if (!res.ok) {
-        throw new Error("Errore durante la rimozione");
-    }
-
-    return res.json();
+    return handleResponse(res, "Errore durante il dismiss");
 }
 
-// -------- RESTORE --------
-
-export async function restoreDismissedPost(id) {
+export async function restoreRawPost(id) {
     const res = await fetch(`${BASE_URL}/raw-posts/${id}/restore`, {
         method: "PATCH",
     });
 
-    if (!res.ok) {
-        throw new Error("Errore durante il ripristino");
-    }
+    return handleResponse(res, "Errore durante il restore");
+}
 
-    return res.json();
+export async function deleteSavedRawPost(id) {
+    return dismissRawPost(id);
 }

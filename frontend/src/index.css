@@ -148,6 +148,120 @@ h1 {
     margin-top: 12px;
 }
 
+.card-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.card-analyzing {
+    position: relative;
+    overflow: hidden;
+}
+
+
+/* ===== Animation ===== */
+.ai-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--primary);
+    white-space: nowrap;
+}
+
+.ai-loading-wrap {
+    margin-bottom: 14px;
+}
+
+.ai-loading-bar {
+    width: 100%;
+    height: 6px;
+    background-color: var(--button-bg);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    position: relative;
+}
+
+.ai-loading-bar-inner {
+    width: 35%;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            var(--primary) 35%,
+            var(--primary-hover) 50%,
+            var(--primary) 65%,
+            transparent 100%);
+    animation: aiBarMove 1.4s linear infinite;
+}
+
+.skeleton-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.skeleton-line {
+    height: 10px;
+    width: 100%;
+    border-radius: 999px;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--button-bg);
+}
+
+.skeleton-line-title {
+    width: 75%;
+}
+
+.skeleton-line-short {
+    width: 50%;
+}
+
+.skeleton-line::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.35) 50%,
+            transparent 100%);
+    animation: skeletonShimmer 1.5s infinite;
+}
+
+body.dark .skeleton-line::after {
+    background: linear-gradient(90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.12) 50%,
+            transparent 100%);
+}
+
+@keyframes aiBarMove {
+    0% {
+        transform: translateX(-120%);
+    }
+
+    100% {
+        transform: translateX(320%);
+    }
+}
+
+@keyframes skeletonShimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
 /* ===== Input ===== */
 
 .input {
@@ -251,5 +365,9 @@ h1 {
 /* ===== Utilities ===== */
 
 p {
+    margin-bottom: 12px;
+}
+
+.toolbar {
     margin-bottom: 12px;
 }
