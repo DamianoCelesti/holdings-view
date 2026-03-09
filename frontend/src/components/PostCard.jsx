@@ -1,47 +1,45 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
-    summarizePost,
-    savePost,
-    dismissNewPost,
-    restoreDismissedPost,
+    saveRawPost,
+    dismissRawPost,
+    restoreRawPost,
+    deleteSavedRawPost,
 } from "../api";
 
-export default function PostCard({ post, onRemove, mode = "new" }) {
-    const [summary, setSummary] = useState("");
-    const [loadingSummary, setLoadingSummary] = useState(false);
+export default function PostCard({
+    post,
+    onRemove,
+    mode = "new",
+    isAnalyzing = false,
+}) {
     const [saving, setSaving] = useState(false);
     const [dismissing, setDismissing] = useState(false);
     const [restoring, setRestoring] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const [showOriginal, setShowOriginal] = useState(false);
 
+    const redditUrl = post.permalink || post.url;
     const originalText = post.selftext?.trim() || "";
-    const hasOriginalText = originalText.length > 0;
 
-    const redditUrl = post.permalink;
-    //console.log(post)
-    async function handleSummarize() {
+    const aiDataPretty = useMemo(() => {
+        if (!post.aiDataJson) return "";
+
         try {
-            setLoadingSummary(true);
-
-            const data = await summarizePost(post.id);
-            setSummary(data.summaryMd);
-
-        } catch (err) {
-            alert("Errore durante il riassunto");
-        } finally {
-            setLoadingSummary(false);
+            if (typeof post.aiDataJson === "string") {
+                return JSON.stringify(JSON.parse(post.aiDataJson), null, 2);
+            }
+            return JSON.stringify(post.aiDataJson, null, 2);
+        } catch (e) {
+            return String(post.aiDataJson);
         }
-    }
+    }, [post.aiDataJson]);
 
     async function handleSave() {
-        if (!summary) return;
-
         try {
             setSaving(true);
-            await savePost(post.id, summary);
+            await saveRawPost(post.id, post.aiSummaryMd || "");
             onRemove?.(post.id);
         } catch (err) {
-            console.error("save error:", err);
             alert(err.message || "Errore durante il salvataggio");
         } finally {
             setSaving(false);
@@ -51,11 +49,10 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
     async function handleDismiss() {
         try {
             setDismissing(true);
-            await dismissNewPost(post.id);
+            await dismissRawPost(post.id);
             onRemove?.(post.id);
         } catch (err) {
-            console.error("dismiss error:", err);
-            alert(err.message || "Errore nel segnare come visualizzato");
+            alert(err.message || "Errore durante il dismiss");
         } finally {
             setDismissing(false);
         }
@@ -64,32 +61,69 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
     async function handleRestore() {
         try {
             setRestoring(true);
-            await restoreDismissedPost(post.id);
+            await restoreRawPost(post.id);
             onRemove?.(post.id);
         } catch (err) {
-            console.error("restore error:", err);
-            alert(err.message || "Errore nel ripristinare il post");
+            alert(err.message || "Errore durante il restore");
         } finally {
             setRestoring(false);
         }
     }
 
-    const disableSummarize = loadingSummary || saving;
-    const disableSave = saving || !summary;
-    const disableDismiss = dismissing || saving || loadingSummary;
-    const disableRestore = restoring;
+    async function handleDeleteSaved() {
+        try {
+            setDeleting(true);
+            await deleteSavedRawPost(post.id);
+            onRemove?.(post.id);
+        } catch (err) {
+            alert(err.message || "Errore durante la cancellazione");
+        } finally {
+            setDeleting(false);
+        }
+    }
+
+    const showAiLoading =
+        isAnalyzing &&
+        mode === "new" &&
+        !post.aiSummaryMd &&
+        !post.aiDataJson;
 
     return (
-        <div className="card">
-            <h3 className="card-title">{post.title}</h3>
+        <div className={`card ${showAiLoading ? "card-analyzing" : ""}`}>
+            <div className="card-header-row">
+                <h3 className="card-title">{post.title}</h3>
+
+                {showAiLoading && (
+                    <span className="ai-badge">AI analyzing...</span>
+                )}
+            </div>
 
             <p className="card-meta">
-                Score: {post.score ?? 0} — Commenti: {post.numComments ?? 0}
+                Score Reddit: {post.score ?? 0} - Commenti: {post.numComments ?? 0}
             </p>
 
+            {showAiLoading && (
+                <div className="ai-loading-wrap">
+                    <div className="ai-loading-bar">
+                        <div className="ai-loading-bar-inner"></div>
+                    </div>
+
+                    <div className="skeleton-lines">
+                        <div className="skeleton-line skeleton-line-title"></div>
+                        <div className="skeleton-line"></div>
+                        <div className="skeleton-line skeleton-line-short"></div>
+                    </div>
+                </div>
+            )}
+
             <div>
-                <a className="button button-secondary" href={redditUrl} target="_blank" rel="noreferrer">
-                    Apri su Reddit
+                <a
+                    className="button button-secondary"
+                    href={redditUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    Open on Reddit
                 </a>
 
                 <button
@@ -97,19 +131,41 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
                     type="button"
                     onClick={() => setShowOriginal((v) => !v)}
                 >
-                    {showOriginal ? "Nascondi testo" : "Testo originale"}
+                    {showOriginal ? "Nascondi testo" : "Original text"}
                 </button>
             </div>
 
             <div>
-                {mode === "new" && (
+                {mode === "uncertain" && (
+                    <>
+                        <button
+                            className="button button-primary"
+                            type="button"
+                            onClick={handleSave}
+                            disabled={saving || dismissing}
+                        >
+                            {saving ? "..." : "Save"}
+                        </button>
+
+                        <button
+                            className="button button-secondary"
+                            type="button"
+                            onClick={handleDismiss}
+                            disabled={dismissing || saving}
+                        >
+                            {dismissing ? "..." : "Dismiss"}
+                        </button>
+                    </>
+                )}
+
+                {mode === "saved" && (
                     <button
-                        className="button button-secondary"
+                        className="button button-danger"
                         type="button"
-                        onClick={handleDismiss}
-                        disabled={disableDismiss}
+                        onClick={handleDeleteSaved}
+                        disabled={deleting}
                     >
-                        {dismissing ? "..." : "Visualizzato"}
+                        {deleting ? "..." : "Delete"}
                     </button>
                 )}
 
@@ -118,42 +174,31 @@ export default function PostCard({ post, onRemove, mode = "new" }) {
                         className="button button-secondary"
                         type="button"
                         onClick={handleRestore}
-                        disabled={disableRestore}
+                        disabled={restoring}
                     >
-                        {restoring ? "..." : "Ripristina tra i nuovi"}
+                        {restoring ? "..." : "Restore"}
                     </button>
                 )}
-
-                <button
-                    className="button button-primary"
-                    type="button"
-                    onClick={handleSummarize}
-                    disabled={disableSummarize}
-                >
-                    {loadingSummary ? "..." : "Riassumi"}
-                </button>
-
-                <button
-                    className="button button-primary"
-                    type="button"
-                    onClick={handleSave}
-                    disabled={disableSave}
-                >
-                    {saving ? "..." : "Salva"}
-                </button>
             </div>
 
             {showOriginal && (
                 <div className="card-content">
-                    <h4>Testo originale</h4>
-                    <pre>{hasOriginalText ? originalText : "(nessun testo, solo link)"}</pre>
+                    <h4>Original text</h4>
+                    <pre>{originalText || "(nessun testo, solo link)"}</pre>
                 </div>
             )}
 
-            {summary && (
+            {(mode === "uncertain" || mode === "saved") && post.aiSummaryMd && (
                 <div className="card-content">
-                    <h4>Riassunto</h4>
-                    <pre>{summary}</pre>
+                    <h4>AI Summary</h4>
+                    <pre>{post.aiSummaryMd}</pre>
+                </div>
+            )}
+
+            {mode === "uncertain" && aiDataPretty && (
+                <div className="card-content">
+                    <h4>AI Data JSON</h4>
+                    <pre>{aiDataPretty}</pre>
                 </div>
             )}
         </div>

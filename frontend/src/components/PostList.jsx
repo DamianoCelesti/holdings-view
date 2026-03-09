@@ -1,6 +1,11 @@
 import PostCard from "./PostCard";
 
-export default function PostList({ posts = [], onRemove, mode = "new" }) {
+export default function PostList({
+    posts = [],
+    onRemove,
+    mode = "new",
+    isAnalyzing = false,
+}) {
     if (!posts.length) {
         return <p>Nessun post da mostrare.</p>;
     }
@@ -13,6 +18,7 @@ export default function PostList({ posts = [], onRemove, mode = "new" }) {
                     post={post}
                     onRemove={onRemove}
                     mode={mode}
+                    isAnalyzing={isAnalyzing}
                 />
             ))}
         </div>
