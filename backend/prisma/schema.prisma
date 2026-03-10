@@ -9,6 +9,8 @@ datasource db {
 
 enum RawStatus {
   NEW
+  UNCERTAIN
+  PROCESSED
   DISMISSED
   SAVED
 }
@@ -26,17 +28,25 @@ model RawPost {
   numComments Int?
   createdUtc  DateTime?
 
-  
   firstSeenAt DateTime  @default(now())
-
-  
   fetchedAt   DateTime  @default(now())
 
-  // stato inbox
   status      RawStatus @default(NEW)
   statusAt    DateTime?
+  processedAt DateTime?
 
-  
+  // Main AI outputs required by manual processing phase
+  aiSummaryMd String?   @db.LongText
+  aiScore     Int?
+  aiDataJson  Json?
+
+  // Extra AI metadata already present in project
+  aiIsRelevant Boolean?
+  aiImportance Int?
+  aiCategory   String?
+  aiTickers    Json?
+  aiReason     String?   @db.LongText
+
   savedPost   SavedPost?
 
   @@index([subreddit])
@@ -45,7 +55,6 @@ model RawPost {
 
 model SavedPost {
   id        Int      @id @default(autoincrement())
-
 
   rawPostId Int      @unique
   rawPost   RawPost  @relation(fields: [rawPostId], references: [id], onDelete: Cascade)
