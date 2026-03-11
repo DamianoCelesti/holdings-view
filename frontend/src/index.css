@@ -307,7 +307,7 @@ body.dark .skeleton-line::after {
     cursor: not-allowed;
 }
 
-/* Varianti */
+/* ======Varianti ======*/
 
 .button-primary {
     background-color: var(--primary);
