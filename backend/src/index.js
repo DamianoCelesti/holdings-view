@@ -2,6 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const routes = require("./routes");
+const prisma = require("./db");
+const { startAutoFetchScheduler } = require("./scheduler");
 
 const app = express();
 
@@ -15,4 +17,13 @@ app.get("/health", (req, res) => res.json({ ok: true }));
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
     console.log(`API running on http://localhost:${port}`);
+    startAutoFetchScheduler();
 });
+
+async function shutdown() {
+    await prisma.$disconnect();
+    process.exit(0);
+}
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
