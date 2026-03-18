@@ -9,7 +9,7 @@ async function fetchJsonWithHeaders(url) {
     });
 
     if (!resp.ok) {
-        const text = await resp.text().catch(() => "");
+        const text = await resp.text();
         throw new Error(
             `Reddit error ${resp.status} ${resp.statusText} :: ${text.slice(0, 200)}`
         );
@@ -21,82 +21,82 @@ async function fetchJsonWithHeaders(url) {
 function normalizePermalinkToPath(permalink) {
     if (!permalink) return "";
 
-
     if (permalink.startsWith("/r/")) return permalink;
-
 
     try {
         const u = new URL(permalink);
-        if (u.pathname?.startsWith("/r/")) return u.pathname.replace(/\/$/, "");
-    } catch (e) {
-
-    }
+        if (u.pathname && u.pathname.startsWith("/r/")) {
+            return u.pathname.replace(/\/$/, "");
+        }
+    } catch (e) { }
 
     return "";
 }
 
-async function fetchHotPosts(subreddit, limit = 25) {
+async function fetchNewPosts(subreddit, limit = 30) {
     const sub = encodeURIComponent(subreddit);
-    const base1 = `https://www.reddit.com/r/${sub}/hot.json?limit=${limit}&raw_json=1`;
-    const base2 = `https://old.reddit.com/r/${sub}/hot.json?limit=${limit}&raw_json=1`;
 
-    let json;
-    try {
-        json = await fetchJsonWithHeaders(base1);
-    } catch (e) {
-        json = await fetchJsonWithHeaders(base2);
-    }
+    const safeLimit = Number(limit) > 0 ? Math.min(Number(limit), 30) : 30;
 
-    const children = json?.data?.children || [];
+    const url = `https://www.reddit.com/r/${sub}/new.json?limit=${safeLimit}&raw_json=1`;
 
-    return children
-        .map((c) => c.data)
-        .filter(Boolean)
-        .map((p) => ({
+    const json = await fetchJsonWithHeaders(url);
+
+    const children = json.data.children;
+
+    return children.map((c) => {
+        const p = c.data;
+
+        return {
             redditId: p.id,
             subreddit: p.subreddit,
             title: p.title,
             author: p.author,
             url: p.url,
             permalink: `https://www.reddit.com${p.permalink}`,
-            selftext: p.selftext || "",
+            selftext: p.selftext,
             score: typeof p.score === "number" ? p.score : null,
             numComments: typeof p.num_comments === "number" ? p.num_comments : null,
-            createdUtc: p.created_utc ? new Date(p.created_utc * 1000) : null,
-        }));
+            createdUtc: p.created_utc
+                ? new Date(p.created_utc * 1000)
+                : null,
+        };
+    });
 }
 
 async function fetchTopComments(permalinkOrUrl, opts = {}) {
-    const limit = Number(opts.limit ?? 80);
-    const sort = String(opts.sort ?? "top");
+    const limit = Number(opts.limit || 80);
+    const sort = String(opts.sort || "top");
 
     const path = normalizePermalinkToPath(permalinkOrUrl);
     if (!path) return [];
 
+    const url = `https://www.reddit.com${path}.json?sort=${sort}&limit=${limit}&raw_json=1`;
 
-    const url1 = `https://www.reddit.com${path}.json?sort=${sort}&limit=${limit}&raw_json=1`;
-    const url2 = `https://old.reddit.com${path}.json?sort=${sort}&limit=${limit}&raw_json=1`;
+    const data = await fetchJsonWithHeaders(url);
 
-    let data;
-    try {
-        data = await fetchJsonWithHeaders(url1);
-    } catch (e) {
-        data = await fetchJsonWithHeaders(url2);
-    }
-
-    const children = data?.[1]?.data?.children || [];
+    const children = data[1].data.children;
 
     const comments = children
-        .filter((c) => c?.kind === "t1")
-        .map((c) => c.data || {})
+        .filter((c) => c.kind === "t1")
+        .map((c) => c.data)
         .map((c) => ({
-            author: c.author || "n/d",
+            author: c.author,
             score: typeof c.score === "number" ? c.score : 0,
-            body: (c.body || "").trim(),
+            body: c.body.trim(),
         }))
-        .filter((c) => c.body && c.body.toLowerCase() !== "[deleted]" && c.body.toLowerCase() !== "[removed]");
+        .filter(
+            (c) =>
+                c.body &&
+                c.body.toLowerCase() !== "[deleted]" &&
+                c.body.toLowerCase() !== "[removed]"
+        );
 
     return comments;
 }
 
-module.exports = { fetchHotPosts, fetchTopComments };
+module.exports = {
+    fetchNewPosts,
+    fetchHotPosts: fetchNewPosts,
+    fetchTopComments,
+};
