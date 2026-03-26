@@ -1,6 +1,8 @@
 const { ingestSubredditNewPosts, getAutoSubreddits } = require("./post-workflow");
 
 const EIGHT_HOURS = 8 * 60 * 60 * 1000;
+let timeoutId = null;
+let intervalId = null;
 
 function getNextRunDate() {
     const now = new Date();
@@ -44,23 +46,46 @@ async function runAutoFetchOnce() {
     }
 }
 
+function logSchedulerError(err) {
+    console.error("[scheduler] run failed", err.message);
+}
+
 function startAutoFetchScheduler() {
+    if (timeoutId || intervalId) {
+        return stopAutoFetchScheduler;
+    }
+
     const now = new Date();
     const nextRun = getNextRunDate();
     const delay = nextRun.getTime() - now.getTime();
 
     console.log("[scheduler] First run at", nextRun.toLocaleString());
 
-    setTimeout(() => {
-        runAutoFetchOnce();
+    timeoutId = setTimeout(() => {
+        timeoutId = null;
+        runAutoFetchOnce().catch(logSchedulerError);
 
-        setInterval(() => {
-            runAutoFetchOnce();
+        intervalId = setInterval(() => {
+            runAutoFetchOnce().catch(logSchedulerError);
         }, EIGHT_HOURS);
-
     }, delay);
+
+    return stopAutoFetchScheduler;
+}
+
+function stopAutoFetchScheduler() {
+    if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+    }
+
+    if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+    }
 }
 
 module.exports = {
     startAutoFetchScheduler,
+    stopAutoFetchScheduler,
 };
