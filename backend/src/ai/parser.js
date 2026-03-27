@@ -76,6 +76,8 @@ function normalizeClassification(raw) {
     return {
         score,
         confidence,
+        isRelevant: Boolean(raw.isRelevant),
+        importance: Math.max(1, Math.min(5, Math.round(Number(raw.importance) || 1))),
         category,
         tickers,
         sentiment,

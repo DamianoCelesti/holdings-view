@@ -2,7 +2,7 @@ const prisma = require("./db");
 const { fetchNewPosts, fetchTopComments } = require("./reddit");
 const { runManualAIPipeline } = require("./ai");
 
-// --- utils
+
 
 function normalizeSubredditName(value) {
     return String(value || "")
@@ -30,7 +30,7 @@ function decidePostStatus(score, confidence) {
     return "UNCERTAIN";
 }
 
-// --- ingest
+
 
 function mapPostToDb(post, now) {
     return {
@@ -81,7 +81,7 @@ async function ingestSubredditNewPosts(subreddit, limit = 30) {
     };
 }
 
-// --- config
+
 
 async function getAutoSubreddits() {
     const configured = parseSubredditsList(process.env.AUTO_SUBREDDITS);
@@ -98,7 +98,7 @@ async function getAutoSubreddits() {
     return [...new Set(merged)];
 }
 
-// --- processing
+
 
 async function processNewPosts(limit) {
     const take = toSafeBatchLimit(limit);
@@ -137,15 +137,15 @@ async function processNewPosts(limit) {
 
             const confidence = Number(ai?.analysis?.confidence ?? 0.5);
             const status = decidePostStatus(ai.aiScore, confidence);
-            const now = new Date();
+            const processedAt = new Date();
 
             await prisma.$transaction(async (tx) => {
                 await tx.rawPost.update({
                     where: { id: post.id },
                     data: {
                         status,
-                        statusAt: now,
-                        processedAt: now,
+                        statusAt: processedAt,
+                        processedAt: processedAt,
                         aiSummaryMd: ai.aiSummaryMd,
                         aiScore: ai.aiScore,
                         aiDataJson: ai.aiDataJson,
