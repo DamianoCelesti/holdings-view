@@ -110,7 +110,7 @@ Moduli principali:
 - `index.js`: entry point del server Express
 - `routes.js`: definizione degli endpoint API
 - `reddit.js`: integrazione con Reddit
-- `ai.js` / `src/ai/*`: prompt, parsing e summarization
+- `src/ai/`: prompt, parsing e summarization
 - `post-workflow.js`: ingest e pipeline di processamento
 - `scheduler.js`: scheduler automatico dei subreddit
 - `db.js`: configurazione del client Prisma
@@ -196,11 +196,11 @@ npm run dev
 Esempio di configurazione backend:
 
 ```env
-DATABASE_URL="mysql://root:"mettilatuapassword"@localhost:3306/holdings_mvp"
+DATABASE_URL="mysql://root:"mettilatuapassword"@localhost:3306/"mettinomedb""
 PORT=3001
 OLLAMA_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=qwen3:14b
-AUTO_SUBREDDITS=stocks,SecurityAnalysis,ValueInvesting,StockMarket
+AUTO_SUBREDDIT=stocks,SecurityAnalysis,ValueInvesting,StockMarket (altrinomidireddit)
 ```
 
 Variabili principali:
