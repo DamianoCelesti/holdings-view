@@ -35,7 +35,7 @@ Flusso generale:
 
 - Node.js
 - Express
-- Prisma ORM
+- Prisma
 - MySQL
 - Reddit API / JSON endpoints
 - Ollama
