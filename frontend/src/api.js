@@ -30,8 +30,14 @@ export async function processNew(limit) {
     return handleResponse(res, "Errore durante l'analisi GPU");
 }
 
-export async function getRawPostsByStatus(status) {
-    const res = await fetch(`${BASE_URL}/raw-posts?status=${encodeURIComponent(status)}`);
+export async function getRawPostsByStatus(status, limit = 10, offset = 0) {
+    const params = new URLSearchParams({
+        status,
+        limit,
+        offset
+    });
+
+    const res = await fetch(`${BASE_URL}/raw-posts?${params}`);
     return handleResponse(res, "Errore nel caricamento dei post");
 }
 

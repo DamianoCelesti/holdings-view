@@ -8,6 +8,10 @@ const allowedStatuses = new Set([
     "SAVED",
 ]);
 
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 20;
+const DEFAULT_OFFSET = 0;
+
 function getStatusFilter(status) {
     const s = String(status || "NEW");
     return allowedStatuses.has(s) ? s : "NEW";
@@ -15,9 +19,26 @@ function getStatusFilter(status) {
 
 async function listRawPosts(req, res) {
     const status = getStatusFilter(req.query.status);
-    const posts = await service.getRawPosts(status);
+
+    const requestedLimit = Number(req.query.limit);
+    let limit = DEFAULT_LIMIT;
+
+    if (Number.isFinite(requestedLimit) && requestedLimit > 0) {
+        limit = Math.min(requestedLimit, MAX_LIMIT);
+    }
+
+    const requestedOffset = Number(req.query.offset);
+    let offset = DEFAULT_OFFSET;
+
+    if (Number.isFinite(requestedOffset) && requestedOffset >= 0) {
+        offset = requestedOffset;
+    }
+
+    const posts = await service.getRawPosts(status, limit, offset);
+
     res.json(posts);
 }
+
 
 async function listDismissed(req, res) {
     const posts = await service.getDismissedPosts();

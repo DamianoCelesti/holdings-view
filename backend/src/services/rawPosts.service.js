@@ -2,13 +2,14 @@ const prisma = require("../db");
 const { fetchTopComments } = require("../reddit");
 const { summarizePostToMarkdownIT } = require("../ai");
 
-async function getRawPosts(status) {
+async function getRawPosts(status, limit, offset) {
     return prisma.rawPost.findMany({
         where: { status },
         orderBy: { firstSeenAt: "asc" },
+        take: limit,
+        skip: offset,
     });
 }
-
 async function getDismissedPosts() {
     return prisma.rawPost.findMany({
         where: { status: "DISMISSED" },
