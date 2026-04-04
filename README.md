@@ -74,7 +74,6 @@ Flusso generale:
     |   |   |-- NavBar.jsx
     |   |   |-- PostList.jsx
     |   |   |-- PostCard.jsx
-    |   |   `-- SavedList.jsx
     |   |-- pages/
     |   |   |-- NewPage.jsx
     |   |   |-- UncertainPage.jsx
@@ -131,7 +130,6 @@ Componenti principali:
 - `NavBar`: navigazione tra le sezioni
 - `PostList`: rendering delle liste di post
 - `PostCard`: scheda singolo post con azioni
-- `SavedList`: vista dedicata ai post salvati
 
 La comunicazione con il backend avviene tramite REST API, centralizzate nel modulo `frontend/src/api.js`.
 
