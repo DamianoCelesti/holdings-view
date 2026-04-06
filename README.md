@@ -249,3 +249,33 @@ In ambiente locale il frontend gira tipicamente su Vite e comunica con il backen
 6. Il frontend mostra i post nelle viste `New`, `Uncertain`, `Saved` e `Dismissed`.
 7. L'utente puo rivedere i contenuti e completare la categorizzazione manuale.
 
+## To Do / Roadmap
+
+
+### Frontend
+
+- Implementare **auto-load dei post nelle pagine** `Uncertain`, `Saved` e `Dismissed`, come già presente in `NewPage.jsx`, per evitare il refresh manuale.
+- Migliorare la gestione dello stato lato client per aggiornare le liste dopo azioni (`save`, `dismiss`, `restore`) senza ricaricare la pagina.
+- Aggiungere **pagina di dettaglio del post** con:
+  - contenuto completo del post
+  - commenti principali recuperati da Reddit
+  - output AI formattato
+- Migliorare la **UI delle `PostCard`** mostrando informazioni sintetiche come:
+  - score
+  - numero di commenti
+  - subreddit
+  - timestamp del post
+
+### Backend
+
+- Migliorare il **workflow di classificazione AI** per distinguere meglio tra `UNCERTAIN` e `SAVED`.
+- Ottimizzare la pipeline di raccolta dei commenti per ridurre il rumore nei prompt inviati al modello.
+
+
+### Pipeline AI
+
+- Sperimentare modelli Ollama alternativi per migliorare la qualità del summary.
+- Introdurre **tag automatici** (es. ticker, settore, tipo di analisi).
+- Migliorare il prompt engineering per ottenere:
+  - sintesi più concise
+  - migliore identificazione dei post rilevanti.
