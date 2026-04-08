@@ -254,7 +254,8 @@ In ambiente locale il frontend gira tipicamente su Vite e comunica con il backen
 
 ### Frontend
 
-- Implementare **auto-load dei post nelle pagine** `Uncertain`, `Saved` e `Dismissed`, come già presente in `NewPage.jsx`, per evitare il refresh manuale.
+- ~~Implementare **auto-load dei post nelle pagine** `Uncertain`, `Saved` e `Dismissed`, come già presente in `NewPage.jsx`, per evitare il refresh manuale.~~
+- Implementare un custom React hook per gestire il caricamento paginato e l'infinite scroll dei post nelle pagine `NewPage`, `Uncertain`, `Saved` e `Dismissed`, evitando duplicazione di codice.
 - Migliorare la gestione dello stato lato client per aggiornare le liste dopo azioni (`save`, `dismiss`, `restore`) senza ricaricare la pagina.
 - Aggiungere **pagina di dettaglio del post** con:
   - contenuto completo del post
