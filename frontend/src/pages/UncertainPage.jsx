@@ -4,30 +4,68 @@ import PostList from "../components/PostList";
 
 export default function UncertainPage({ refreshKey }) {
     const [posts, setPosts] = useState([]);
+    const [offset, setOffset] = useState(0);
+    const [loading, setLoading] = useState(false);
+
+    const limit = 10;
+
+    async function loadUncertainPosts() {
+        if (loading) return;
+
+        try {
+            setLoading(true);
+
+            const data = await getUncertainPosts(limit, offset);
+
+            setPosts((prev) => [...prev, ...data]);
+            setOffset((prev) => prev + data.length);
+        } catch (err) {
+            console.error("getUncertainPosts error:", err);
+            alert("Errore nel caricare i post incerti");
+        } finally {
+            setLoading(false);
+        }
+    }
 
     useEffect(() => {
-        async function loadUncertain() {
-            try {
-                const res = await getUncertainPosts();
-                setPosts(res);
-            } catch (e) {
-                console.error(e);
-                alert("Errore nel caricare i post incerti");
+        setPosts([]);
+        setOffset(0);
+        loadUncertainPosts();
+    }, [refreshKey]);
+
+    useEffect(() => {
+        function handleScroll() {
+            const nearBottom =
+                window.innerHeight + window.scrollY >=
+                document.body.offsetHeight - 300;
+
+            if (nearBottom) {
+                loadUncertainPosts();
             }
         }
 
-        loadUncertain();
-    }, [refreshKey]);
+        window.addEventListener("scroll", handleScroll);
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+        };
+    }, [offset, loading]);
 
     function removeFromList(id) {
-        const filtered = posts.filter((p) => p.id !== id);
-        setPosts(filtered);
+        setPosts((prev) => prev.filter((p) => p.id !== id));
     }
 
     return (
         <>
             <p>Post UNCERTAIN: {posts.length}</p>
-            <PostList posts={posts} onRemove={removeFromList} mode="uncertain" />
+
+            <PostList
+                posts={posts}
+                onRemove={removeFromList}
+                mode="uncertain"
+            />
+
+            {loading && <p>Loading...</p>}
         </>
     );
 }
