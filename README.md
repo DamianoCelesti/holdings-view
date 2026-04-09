@@ -52,16 +52,7 @@ Flusso generale:
 ```text
 .
 |-- backend/
-|   |-- prisma/
-|   |   `-- schema.prisma
-|   |-- src/
-|   |   |-- index.js
-|   |   |-- routes.js
-|   |   |-- reddit.js
-|   |   |-- post-workflow.js
-|   |   |-- scheduler.js
-|   |   |-- db.js
-|   |   `-- ai/
+
 |   |       |-- index.js
 |   |       |-- ollama.js
 |   |       `-- prompts.js
