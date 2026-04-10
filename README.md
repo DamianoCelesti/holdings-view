@@ -51,28 +51,67 @@ Flusso generale:
 
 ```text
 .
-|-- backend/
-
-|   |       |-- index.js
-|   |       |-- ollama.js
-|   |       `-- prompts.js
-|   `-- package.json
-`-- frontend/
-    |-- src/
-    |   |-- App.jsx
-    |   |-- api.js
-    |   |-- components/
-    |   |   |-- NavBar.jsx
-    |   |   |-- PostList.jsx
-    |   |   |-- PostCard.jsx
-    |   |-- pages/
-    |   |   |-- NewPage.jsx
-    |   |   |-- UncertainPage.jsx
-    |   |   |-- SavedPage.jsx
-    |   |   `-- DismissedPage.jsx
-    |   `-- routes/
-    |       `-- routesConfig.jsx
-    `-- package.json
+├── backend/
+│   ├── prisma/
+│   │   └── schema.prisma
+│   │
+│   ├── src/
+│   │   ├── ai/
+│   │   │   ├── comments.js
+│   │   │   ├── index.js
+│   │   │   ├── ollama.js
+│   │   │   ├── parser.js
+│   │   │   └── prompts.js
+│   │   │
+│   │   ├── controllers/
+│   │   │   ├── rawposts.controller.js
+│   │   │   ├── savedposts.controller.js
+│   │   │   └── workflow.controller.js
+│   │   │
+│   │   ├── middleware/
+│   │   │   ├── asyncHandler.js
+│   │   │   └── loadRawPost.js
+│   │   │
+│   │   ├── routes/
+│   │   │   ├── index.js
+│   │   │   ├── rawpost.routes.js
+│   │   │   ├── savedposts.routes.js
+│   │   │   └── workflow.routes.js
+│   │   │
+│   │   ├── services/
+│   │   │   ├── rawposts.service.js
+│   │   │   ├── savedposts.service.js
+│   │   │   └── workflow.service.js
+│   │   │
+│   │   ├── db.js
+│   │   ├── index.js
+│   │   ├── post-workflow.js
+│   │   ├── reddit.js
+│   │   ├── routes.js
+│   │   └── scheduler.js
+│   │
+│   └── package.json
+│
+└── frontend/
+    ├── src/
+    │   ├── App.jsx
+    │   ├── api.js
+    │   │
+    │   ├── components/
+    │   │   ├── NavBar.jsx
+    │   │   ├── PostList.jsx
+    │   │   └── PostCard.jsx
+    │   │
+    │   ├── pages/
+    │   │   ├── NewPage.jsx
+    │   │   ├── UncertainPage.jsx
+    │   │   ├── SavedPage.jsx
+    │   │   └── DismissedPage.jsx
+    │   │
+    │   └── routes/
+    │       └── routesConfig.jsx
+    │
+    └── package.json
 ```
 
 ## Backend
